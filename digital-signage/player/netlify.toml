@@ -1,0 +1,27 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;"
+    X-Frame-Options = "SAMEORIGIN"
+    Cache-Control = "no-cache"
+
+# Proxy playlist requests through Netlify to avoid CORS issues
+[[redirects]]
+  from = "/api/playlist"
+  to = "https://script.google.com/macros/s/PASTE_YOUR_TV1_APPS_SCRIPT_URL_ID/exec"
+  status = 200
+  force = true
+
+# TV 2 proxy
+[[redirects]]
+  from = "/api/playlist2"
+  to = "https://script.google.com/macros/s/PASTE_YOUR_TV2_APPS_SCRIPT_URL_ID/exec"
+  status = 200
+  force = true
+
+# TV 3 proxy
+[[redirects]]
+  from = "/api/playlist3"
+  to = "https://script.google.com/macros/s/PASTE_YOUR_TV3_APPS_SCRIPT_URL_ID/exec"
+  status = 200
+  force = true

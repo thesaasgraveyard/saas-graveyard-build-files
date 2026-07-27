@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Time Clock</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .page {
+      width: 7.5in;
+      min-height: 10in;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75in;
+      gap: 0;
+    }
+
+    /* Top rule */
+    .rule {
+      width: 100%;
+      height: 6px;
+      background: #1a1a2e;
+      border-radius: 3px;
+      margin-bottom: 52px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 800;
+      color: #1a1a2e;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .sub {
+      font-size: 20px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 56px;
+      font-weight: 400;
+    }
+
+    /* QR code container */
+    .qr-wrap {
+      background: #fff;
+      border: 3px solid #1a1a2e;
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 52px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+    }
+
+    #qrcode canvas, #qrcode img {
+      display: block;
+    }
+
+    /* Steps */
+    .steps {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 56px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 170px;
+      text-align: center;
+    }
+
+    .step-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-text {
+      font-size: 15px;
+      color: #444;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    /* Bottom rule */
+    .bottom-rule {
+      width: 100%;
+      height: 3px;
+      background: #f0f0f0;
+      border-radius: 2px;
+      margin-top: 8px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #bbb;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: #fff;
+        min-height: unset;
+      }
+      .page {
+        width: 100%;
+        min-height: unset;
+        padding: 0.5in;
+      }
+      .qr-wrap {
+        box-shadow: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .rule, .step-num {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="rule"></div>
+
+    <p class="eyebrow">Employee Portal</p>
+    <h1>Clock In &amp; Out</h1>
+    <p class="sub">Scan the QR code with your phone's camera</p>
+
+    <div class="qr-wrap">
+      <div id="qrcode"></div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <p class="step-text">Open your phone camera and point it at the code</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <p class="step-text">Tap the link that appears on your screen</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <p class="step-text">Find your name and tap Clock In or Clock Out</p>
+      </div>
+    </div>
+
+    <div class="bottom-rule"></div>
+    <p class="footer">Bookmark the link on your phone for faster access next time</p>
+
+  </div>
+
+  <script>
+    new QRCode(document.getElementById('qrcode'), {
+      text: 'https://script.google.com/macros/s/PASTE_YOUR_TIMECLOCK_APPS_SCRIPT_URL_ID/exec',
+      width: 300,
+      height: 300,
+      colorDark: '#1a1a2e',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  </script>
+</body>
+</html>

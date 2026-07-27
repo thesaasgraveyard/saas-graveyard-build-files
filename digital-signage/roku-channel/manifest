@@ -1,0 +1,24 @@
+## Channel Details
+title=Digital Signage
+subtitle=Free signage player
+major_version=1
+minor_version=0
+build_version=1
+
+## Channel Icons
+mm_icon_focus_hd=pkg:/images/icon_focus_hd.png
+mm_icon_side_hd=pkg:/images/icon_side_hd.png
+mm_icon_focus_sd=pkg:/images/icon_focus_sd.png
+mm_icon_side_sd=pkg:/images/icon_side_sd.png
+
+## Splash Screen
+splash_screen_hd=pkg:/images/splash_hd.jpg
+splash_screen_sd=pkg:/images/splash_sd.jpg
+splash_color=#000000
+splash_min_time=1500
+
+## Resolution
+ui_resolutions=fhd
+
+## Misc
+bs_const=DEBUG=false

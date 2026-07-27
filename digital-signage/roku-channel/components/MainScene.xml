@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+
+    <!-- Config and scene logic -->
+    <script type="text/brightscript" uri="pkg:/source/config.brs"/>
+    <script type="text/brightscript" uri="MainScene.brs"/>
+
+    <children>
+
+        <!-- ── Black background ─────────────────────────────── -->
+        <Rectangle id="bgRect" width="1920" height="1080" color="0x000000FF"/>
+
+        <!-- ── Two image Posters for crossfade ──────────────── -->
+        <!--   posterA starts hidden; we swap which is "on"      -->
+        <Poster id="posterA"
+                width="1920" height="1080"
+                loadDisplayMode="scaleToFit"
+                opacity="0"/>
+
+        <Poster id="posterB"
+                width="1920" height="1080"
+                loadDisplayMode="scaleToFit"
+                opacity="0"/>
+
+        <!-- ── Video player ──────────────────────────────────── -->
+        <Video id="videoPlayer"
+               width="1920" height="1080"
+               visible="false"/>
+
+        <!-- ── Status overlay (shown during loading / errors) ── -->
+        <Rectangle id="statusBg"
+                   width="1920" height="1080"
+                   color="0x000000FF"
+                   visible="true"/>
+
+        <Label id="statusLabel"
+               width="1500" height="600"
+               translation="[210, 240]"
+               horizAlign="center"
+               vertAlign="center"
+               font="font:LargeBoldSystemFont"
+               color="0xFFFFFFFF"
+               wrap="true"
+               numLines="8"
+               text="Loading content..."
+               visible="true"/>
+
+    </children>
+</component>

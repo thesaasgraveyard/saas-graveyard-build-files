@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Staff Schedule</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      /* Brand palette */
+      --navy:  #0e2558;   /* primary dark */
+      --indigo:#2f3192;   /* secondary */
+      --sky:   #25a4dd;   /* accent */
+      --taupe: #a79880;
+      --sand:  #cbc2b4;
+      /* Per-employee colors (drawn from the brand palette) */
+      --c0: #0e2558; --c1: #2f3192; --c2: #25a4dd; --c3: #a79880; --c4: #cbc2b4;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; padding-bottom: 80px; }
+
+    /* HEADER */
+    header { background: var(--navy); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .week-nav { display: flex; align-items: center; gap: 10px; }
+    .week-nav span { font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .nav-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .nav-btn:hover { background: rgba(255,255,255,0.25); }
+    .week-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; padding: 6px 12px; border-radius: 50px; cursor: pointer; font-family: inherit; }
+    .week-btn:hover { background: rgba(255,255,255,0.22); }
+    .week-btn::after { content: ' ▾'; font-size: 10px; opacity: 0.7; }
+
+    /* CALENDAR PICKER */
+    .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .cal-title { font-size: 16px; font-weight: 800; color: var(--navy); }
+    .cal-nav { display: flex; gap: 6px; }
+    .cal-nav button { background: #f0f2f5; border: none; color: var(--navy); width: 30px; height: 30px; border-radius: 50%; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .cal-nav button:hover { background: #e0e4ec; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--taupe); padding: 4px 0; }
+    .cal-day { border: none; background: none; font-size: 14px; color: var(--navy); height: 38px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+    .cal-day:hover { background: #f0f2f5; }
+    .cal-day.other { color: #c5c9d3; }
+    .cal-day.in-week { background: rgba(37,164,221,0.16); }
+    .cal-day.today { background: var(--navy); color: #fff; font-weight: 700; }
+
+    /* EDIT BAR */
+    #editBar { background: #f3efe8; border-bottom: 2px solid var(--taupe); padding: 10px 16px; display: none; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    #editBar.visible { display: flex; }
+    #editBar span { font-size: 13px; font-weight: 600; color: var(--navy); }
+    .bar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-sm { padding: 7px 14px; border: none; border-radius: 50px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-copy { background: var(--sky); color: #fff; }
+    .btn-diagnose { background: #6b7280; color: #fff; font-size: 11px; }
+    .btn-logout { background: #ef4444; color: #fff; }
+
+    /* GRID */
+    .grid-wrapper { overflow-x: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+    .schedule-table { width: 100%; min-width: 620px; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .schedule-table thead th { background: var(--navy); color: #fff; padding: 10px 6px; font-size: 12px; font-weight: 700; text-align: center; white-space: nowrap; }
+    .schedule-table thead th:first-child { text-align: left; padding-left: 14px; min-width: 110px; }
+    .schedule-table thead th.day-header { min-width: 100px; }
+    .emp-cell { padding: 8px 8px 8px 14px; font-size: 13px; font-weight: 700; color: var(--navy); border-bottom: 1px solid #f0f0f0; vertical-align: top; white-space: nowrap; }
+    /* Employee names stay pinned while the week scrolls sideways on phones */
+    .schedule-table thead th:first-child { position: sticky; left: 0; z-index: 3; }
+    .emp-cell { position: sticky; left: 0; z-index: 2; background: #fff; box-shadow: 2px 0 4px rgba(0,0,0,0.04); }
+    .emp-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+    .day-cell { border-bottom: 1px solid #f0f0f0; border-left: 1px solid #f0f0f0; padding: 6px; vertical-align: top; min-height: 60px; cursor: default; }
+    .day-cell.editable { cursor: pointer; }
+    .day-cell.editable:hover { background: #f8f9ff; }
+    .shift-block { border-radius: 8px; padding: 5px 8px; margin-bottom: 4px; font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 4px; line-height: 1.3; }
+    /* Dark-blue blocks get white text; lighter brand colors get navy text for readability */
+    .shift-block.c0 { background: var(--c0); } .shift-block.c1 { background: var(--c1); }
+    .shift-block.c2 { background: var(--c2); color: var(--navy); }
+    .shift-block.c3 { background: var(--c3); color: var(--navy); }
+    .shift-block.c4 { background: var(--c4); color: var(--navy); }
+    .shift-time { flex: 1; }
+    .shift-delete { background: rgba(255,255,255,0.25); border: none; color: #fff; width: 18px; height: 18px; border-radius: 50%; font-size: 13px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .shift-delete:hover { background: rgba(255,255,255,0.45); }
+    .shift-block.c2 .shift-delete, .shift-block.c3 .shift-delete, .shift-block.c4 .shift-delete { background: rgba(14,37,88,0.15); color: var(--navy); }
+    .shift-block.c2 .shift-delete:hover, .shift-block.c3 .shift-delete:hover, .shift-block.c4 .shift-delete:hover { background: rgba(14,37,88,0.3); }
+    .add-hint { color: #ccc; font-size: 20px; text-align: center; padding: 6px 0; display: none; }
+    .day-cell.editable:hover .add-hint { display: block; }
+
+    /* WEEKLY NOTES */
+    .notes-card { margin: 0 16px 16px; background: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .notes-card h3 { font-size: 12px; font-weight: 700; color: var(--taupe); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+    #notesText { font-size: 14px; color: var(--navy); line-height: 1.5; white-space: pre-wrap; }
+    #notesInput { width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--navy); resize: vertical; display: none; }
+    #notesInput:focus { outline: none; border-color: var(--navy); }
+    #saveNoteBtn { margin-top: 8px; background: var(--navy); color: #fff; display: none; }
+
+    /* MODALS */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .overlay.hidden { display: none; }
+    .modal-box { background: #fff; border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 360px; box-shadow: 0 16px 48px rgba(0,0,0,0.2); }
+    .modal-box h2 { font-size: 18px; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
+    .form-row { margin-bottom: 14px; }
+    .form-row label { display: block; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+    .form-row select, .form-row input { width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; background: #fff; color: var(--navy); appearance: none; -webkit-appearance: none; }
+    .form-row select:focus, .form-row input:focus { outline: none; border-color: var(--navy); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-primary { flex: 1; padding: 12px; background: var(--navy); color: #fff; border: none; border-radius: 50px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-secondary { flex: 1; padding: 12px; background: #f0f2f5; color: #555; border: none; border-radius: 50px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .pin-input { text-align: center; font-size: 28px; font-weight: 700; letter-spacing: 8px; }
+    .pin-error { color: #ef4444; font-size: 13px; text-align: center; margin-top: 8px; min-height: 18px; }
+
+    /* FOOTER */
+    footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; padding: 12px 20px; display: flex; justify-content: center; gap: 12px; }
+    .btn-manager { padding: 10px 24px; background: var(--navy); color: #fff; border: none; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-copy-link { padding: 10px 24px; background: #f0f2f5; color: var(--navy); border: 2px solid #d0d4dc; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-copy-link:active { background: #e0e4ec; }
+
+    /* LOADER */
+    #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 500; }
+    .spinner { width: 36px; height: 36px; border: 4px solid #e5e7eb; border-top-color: var(--navy); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loader.hidden { display: none; }
+
+    /* TOAST — top of screen so it never covers footer buttons */
+    #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--navy); color: #fff; padding: 10px 22px; border-radius: 50px; font-size: 14px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: transform 0.3s ease; white-space: nowrap; z-index: 400; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    .c0 { background-color: var(--c0); } .c1 { background-color: var(--c1); }
+    .c2 { background-color: var(--c2); } .c3 { background-color: var(--c3); } .c4 { background-color: var(--c4); }
+
+    /* MOBILE (portrait phones) — bigger touch targets, tighter chrome */
+    @media (max-width: 600px) {
+      header { padding: 12px 10px; gap: 6px; }
+      header h1 { font-size: 15px; }
+      .week-nav { gap: 6px; }
+      .nav-btn { width: 38px; height: 38px; font-size: 18px; }
+      .week-btn { padding: 8px 12px; font-size: 13px; }
+      .grid-wrapper { padding: 10px; }
+      .schedule-table thead th:first-child { min-width: 92px; }
+      .emp-cell { font-size: 12px; padding-left: 10px; }
+      .day-cell { min-width: 96px; }
+      .shift-block { font-size: 12px; padding: 7px 8px; }
+      .shift-delete { width: 24px; height: 24px; font-size: 15px; }
+      .notes-card { margin: 0 10px 16px; }
+      footer { padding: 10px 12px; gap: 8px; }
+      .btn-manager, .btn-copy-link { flex: 1; padding: 14px 8px; font-size: 15px; white-space: nowrap; }
+      .btn-sm { padding: 10px 14px; }
+      .cal-day { height: 42px; font-size: 15px; }
+      body { padding-bottom: 90px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div></div>
+
+<header>
+  <h1>📅 Schedule</h1>
+  <div class="week-nav">
+    <button class="nav-btn" id="prevWeek">&#8249;</button>
+    <button class="week-btn" id="weekLabel" title="Jump to a date">Loading...</button>
+    <button class="nav-btn" id="nextWeek">&#8250;</button>
+  </div>
+</header>
+
+<div id="editBar">
+  <span>✏️ Edit Mode</span>
+  <div class="bar-actions">
+    <button class="btn-sm btn-copy" id="copyLastWeek">Copy Last Week</button>
+    <button class="btn-sm btn-diagnose" id="diagnoseBtn">🔍 Diagnose</button>
+    <button class="btn-sm btn-logout" id="doneEditing">🔒 Log Out</button>
+  </div>
+</div>
+
+<div class="grid-wrapper">
+  <table class="schedule-table">
+    <thead id="tableHead"></thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="notes-card" id="notesCard" style="display:none">
+  <h3>📝 Notes</h3>
+  <div id="notesText"></div>
+  <textarea id="notesInput" rows="3" placeholder="Notes for this week — availability, reminders…"></textarea>
+  <button class="btn-sm" id="saveNoteBtn">Save Note</button>
+</div>
+
+<footer>
+  <button class="btn-copy-link" id="copyLinkBtn">🔗 Copy Schedule Link</button>
+  <button class="btn-manager" id="managerBtn">🔒 Manager Login</button>
+</footer>
+
+<!-- Add Shift Modal -->
+<div class="overlay hidden" id="shiftOverlay">
+  <div class="modal-box">
+    <h2>Add Shift</h2>
+    <div class="form-row"><label>Employee</label><select id="shiftEmployee"></select></div>
+    <div class="form-row"><label>Day</label><select id="shiftDay"></select></div>
+    <div class="form-row"><label>Start Time</label><select id="shiftStart"></select></div>
+    <div class="form-row"><label>End Time</label><select id="shiftEnd"></select></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelShift">Cancel</button>
+      <button class="btn-primary" id="saveShift">Save Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar Picker Modal -->
+<div class="overlay hidden" id="calOverlay">
+  <div class="modal-box">
+    <div class="cal-head">
+      <div class="cal-title" id="calTitle"></div>
+      <div class="cal-nav">
+        <button id="calPrev">&#8249;</button>
+        <button id="calNext">&#8250;</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="calCancel">Cancel</button>
+      <button class="btn-primary" id="calToday">Today</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN Modal -->
+<div class="overlay hidden" id="pinOverlay">
+  <div class="modal-box">
+    <h2>Manager PIN</h2>
+    <div class="form-row">
+      <input class="pin-input" type="password" inputmode="numeric" id="pinInput" maxlength="8" placeholder="••••">
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelPin">Cancel</button>
+      <button class="btn-primary" id="submitPin">Enter</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var EMPLOYEES  = [];
+var APP_URL    = '';   // real deployment URL from server
+var COLORS     = ['c0','c1','c2','c3','c4'];
+var DAYS       = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+var editMode      = false;
+var AUTH_TOKEN    = '';      // session token from checkPin — required by all editing calls
+var editingShiftId = null;   // set when editing an existing shift, null when adding new
+var currentWeekStart = getMonday(new Date());
+var scheduleData     = [];
+var weekNote         = '';   // free-text note for the week being viewed
+
+// ── DATE HELPERS ─────────────────────────────────────────────
+function getMonday(d) {
+  var dt = new Date(d), day = dt.getDay();
+  dt.setDate(dt.getDate() - (day === 0 ? 6 : day - 1));
+  dt.setHours(0,0,0,0); return dt;
+}
+function formatDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function weekLabel(monday) {
+  var sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  var mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return mo[monday.getMonth()]+' '+monday.getDate()+' – '+mo[sunday.getMonth()]+' '+sunday.getDate();
+}
+function addDays(d,n) { var r=new Date(d); r.setDate(d.getDate()+n); return r; }
+
+// ── TIME HELPERS ─────────────────────────────────────────────
+function generateTimes() {
+  var t=[];
+  for (var h=5;h<=23;h++) for (var m=0;m<60;m+=30) {
+    if(h===23&&m===30) break;
+    var h12=h>12?h-12:(h===0?12:h), ampm=h<12?'AM':'PM';
+    t.push({label:h12+':'+(m===0?'00':m)+' '+ampm, val:String(h).padStart(2,'0')+':'+(m===0?'00':'30')});
+  }
+  return t;
+}
+function fmt12(t24) {
+  if(!t24) return '';
+  var p=t24.split(':'),h=parseInt(p[0]),m=p[1];
+  return (h>12?h-12:(h===0?12:h))+':'+m+(h<12?' AM':' PM');
+}
+
+// ── TOAST (top of screen) ─────────────────────────────────────
+var toastTimer;
+function showToast(msg) {
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderGrid() {
+  document.getElementById('weekLabel').textContent = weekLabel(currentWeekStart);
+  var thead=document.getElementById('tableHead');
+  var hr='<tr><th>Employee</th>';
+  for(var d=0;d<7;d++){var day=addDays(currentWeekStart,d);hr+='<th class="day-header">'+DAYS[d]+'<br><span style="font-size:10px;opacity:.7">'+(day.getMonth()+1)+'/'+day.getDate()+'</span></th>';}
+  thead.innerHTML=hr+'</tr>';
+
+  var tbody=document.getElementById('tableBody'); tbody.innerHTML='';
+  EMPLOYEES.forEach(function(emp,empIdx){
+    var row=document.createElement('tr');
+    var empTd=document.createElement('td'); empTd.className='emp-cell';
+    empTd.innerHTML='<span class="emp-dot '+COLORS[empIdx%COLORS.length]+'"></span>'+escHtml(emp);
+    row.appendChild(empTd);
+    for(var d=0;d<7;d++){
+      var td=document.createElement('td');
+      td.className='day-cell'+(editMode?' editable':'');
+      var dayShifts=scheduleData.filter(function(s){return s.employee===emp&&s.day===d;});
+      dayShifts.forEach(function(shift){
+        var block=document.createElement('div');
+        block.className='shift-block '+COLORS[empIdx%COLORS.length];
+        var ts=document.createElement('span'); ts.className='shift-time';
+        ts.textContent=fmt12(shift.startTime)+' – '+fmt12(shift.endTime);
+        block.appendChild(ts);
+        if(editMode){
+          // Clicking the shift block opens it for editing (pre-filled with its times)
+          (function(s,ei,di){
+            block.onclick=function(e){e.stopPropagation();openShiftModal(ei,di,s);};
+          })(shift,empIdx,d);
+          var del=document.createElement('button'); del.className='shift-delete'; del.textContent='×';
+          (function(sid){del.onclick=function(e){e.stopPropagation();removeShift(sid);};})(shift.id);
+          block.appendChild(del);
+        }
+        td.appendChild(block);
+      });
+      if(editMode){
+        var hint=document.createElement('div'); hint.className='add-hint'; hint.textContent='+'; td.appendChild(hint);
+        // Clicking empty space in the cell opens a blank new-shift modal
+        (function(ei,di){td.onclick=function(){openShiftModal(ei,di,null);};})(empIdx,d);
+      }
+      row.appendChild(td);
+    }
+    tbody.appendChild(row);
+  });
+  renderNotes();
+}
+
+// ── WEEKLY NOTES ──────────────────────────────────────────────
+function renderNotes() {
+  var card  = document.getElementById('notesCard');
+  var txt   = document.getElementById('notesText');
+  var input = document.getElementById('notesInput');
+  var btn   = document.getElementById('saveNoteBtn');
+  txt.textContent = weekNote;
+  if (editMode) {
+    card.style.display = 'block';
+    txt.style.display = 'none';
+    input.style.display = 'block';
+    btn.style.display = 'inline-block';
+    input.value = weekNote;
+  } else {
+    input.style.display = 'none';
+    btn.style.display = 'none';
+    txt.style.display = 'block';
+    card.style.display = weekNote.trim() ? 'block' : 'none';
+  }
+}
+document.getElementById('saveNoteBtn').onclick = function() {
+  var note = document.getElementById('notesInput').value;
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res.success) { weekNote = note; showToast('✅ Note saved'); }
+      else {
+        showToast('⚠ ' + (res.error || 'Could not save note'));
+        if (res.authExpired) exitEditMode();
+      }
+    })
+    .withFailureHandler(function() { showToast('⚠ Error — try again'); })
+    .saveNote(AUTH_TOKEN, formatDate(currentWeekStart), note);
+};
+
+// ── LOAD ──────────────────────────────────────────────────────
+function loadSchedule() {
+  document.getElementById('loader').classList.remove('hidden');
+  google.script.run
+    .withSuccessHandler(function(res){
+      // New backend returns {shifts, note}; tolerate a plain array from old code
+      if (Array.isArray(res)) { scheduleData = res; weekNote = ''; }
+      else { scheduleData = res.shifts || []; weekNote = res.note || ''; }
+      renderGrid();
+      document.getElementById('loader').classList.add('hidden');
+    })
+    .withFailureHandler(function(){document.getElementById('loader').classList.add('hidden');showToast('⚠ Could not load schedule');})
+    .getSchedule(formatDate(currentWeekStart));
+}
+
+// ── ADD SHIFT MODAL ───────────────────────────────────────────
+var TIMES=generateTimes();
+function populateTimeSelects(){
+  ['shiftStart','shiftEnd'].forEach(function(id){
+    var sel=document.getElementById(id); sel.innerHTML='';
+    TIMES.forEach(function(t){var o=document.createElement('option');o.value=t.val;o.textContent=t.label;sel.appendChild(o);});
+  });
+  document.getElementById('shiftStart').value='09:00';
+  document.getElementById('shiftEnd').value='17:00';
+}
+// existingShift: shift object to edit (pre-fills modal), or null for a new shift
+function openShiftModal(empIdx,dayIdx,existingShift){
+  if(!editMode) return;
+  editingShiftId = existingShift ? existingShift.id : null;
+  document.querySelector('#shiftOverlay h2').textContent = existingShift ? 'Edit Shift' : 'Add Shift';
+  var es=document.getElementById('shiftEmployee'); es.innerHTML='';
+  EMPLOYEES.forEach(function(n,i){
+    var o=document.createElement('option');o.value=n;o.textContent=n;
+    if(existingShift ? n===existingShift.employee : i===empIdx) o.selected=true;
+    es.appendChild(o);
+  });
+  var ds=document.getElementById('shiftDay'); ds.innerHTML='';
+  DAYS.forEach(function(n,i){
+    var o=document.createElement('option');var day=addDays(currentWeekStart,i);
+    o.value=i;o.textContent=n+' '+(day.getMonth()+1)+'/'+day.getDate();
+    if(existingShift ? i===existingShift.day : i===dayIdx) o.selected=true;
+    ds.appendChild(o);
+  });
+  populateTimeSelects();
+  // Pre-fill times if editing an existing shift
+  if(existingShift){
+    document.getElementById('shiftStart').value=existingShift.startTime;
+    document.getElementById('shiftEnd').value=existingShift.endTime;
+  }
+  document.getElementById('shiftOverlay').classList.remove('hidden');
+}
+document.getElementById('cancelShift').onclick=function(){
+  editingShiftId=null;
+  document.getElementById('shiftOverlay').classList.add('hidden');
+};
+document.getElementById('saveShift').onclick=function(){
+  var emp=document.getElementById('shiftEmployee').value;
+  var day=parseInt(document.getElementById('shiftDay').value);
+  var start=document.getElementById('shiftStart').value;
+  var end=document.getElementById('shiftEnd').value;
+  if(start>=end){showToast('⚠ End time must be after start time');return;}
+  document.getElementById('shiftOverlay').classList.add('hidden');
+  document.getElementById('loader').classList.remove('hidden');
+  var idToUpdate=editingShiftId;
+  editingShiftId=null;
+  var handler=google.script.run
+    .withSuccessHandler(function(res){
+      if(res.success){loadSchedule();showToast(idToUpdate?'✅ Shift updated':'✅ Shift added');}
+      else{
+        document.getElementById('loader').classList.add('hidden');
+        showToast('⚠ '+(res.error||'Could not save shift'));
+        if(res.authExpired) exitEditMode();
+      }
+    })
+    .withFailureHandler(function(){document.getElementById('loader').classList.add('hidden');showToast('⚠ Error — try again');});
+  if(idToUpdate){
+    // Single server call updates the shift in place
+    handler.updateShift(AUTH_TOKEN,idToUpdate,formatDate(currentWeekStart),emp,day,start,end);
+  } else {
+    handler.addShift(AUTH_TOKEN,formatDate(currentWeekStart),emp,day,start,end);
+  }
+};
+
+// ── DELETE SHIFT ──────────────────────────────────────────────
+function removeShift(id){
+  if(!confirm('Delete this shift?')) return;
+  document.getElementById('loader').classList.remove('hidden');
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(res.success){loadSchedule();showToast('Shift removed');}
+      else{
+        document.getElementById('loader').classList.add('hidden');
+        showToast('⚠ '+(res.error||'Could not delete'));
+        if(res.authExpired) exitEditMode();
+      }
+    })
+    .withFailureHandler(function(){document.getElementById('loader').classList.add('hidden');showToast('⚠ Error');})
+    .deleteShift(AUTH_TOKEN,id);
+}
+
+// ── PIN ────────────────────────────────────────────────────────
+document.getElementById('managerBtn').onclick=function(){
+  document.getElementById('pinInput').value=''; document.getElementById('pinError').textContent='';
+  document.getElementById('pinOverlay').classList.remove('hidden');
+  setTimeout(function(){document.getElementById('pinInput').focus();},100);
+};
+document.getElementById('cancelPin').onclick=function(){document.getElementById('pinOverlay').classList.add('hidden');};
+document.getElementById('pinInput').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('submitPin').click();});
+document.getElementById('submitPin').onclick=function(){
+  var pin=document.getElementById('pinInput').value;
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(res.valid){AUTH_TOKEN=res.token||'';document.getElementById('pinOverlay').classList.add('hidden');enterEditMode();}
+      else{document.getElementById('pinError').textContent=res.error||'Incorrect PIN — try again';document.getElementById('pinInput').value='';document.getElementById('pinInput').focus();}
+    })
+    .withFailureHandler(function(){document.getElementById('pinError').textContent='Error — try again';})
+    .checkPin(pin);
+};
+
+// ── EDIT MODE ─────────────────────────────────────────────────
+function enterEditMode(){
+  editMode=true;
+  document.getElementById('editBar').classList.add('visible');
+  document.getElementById('managerBtn').style.display='none';
+  renderGrid(); showToast('✏️ Edit mode — tap any cell to add a shift');
+}
+function exitEditMode(){
+  editMode=false;
+  AUTH_TOKEN='';
+  document.getElementById('editBar').classList.remove('visible');
+  document.getElementById('managerBtn').style.display='';
+  renderGrid();
+}
+document.getElementById('doneEditing').onclick=exitEditMode;
+document.getElementById('copyLastWeek').onclick=function(){
+  if(!confirm('Replace this week\'s schedule with a copy of last week?')) return;
+  document.getElementById('loader').classList.remove('hidden');
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(res.success){loadSchedule();showToast('✅ Copied '+res.copied+' shift'+(res.copied!==1?'s':'')+' from last week');}
+      else{
+        document.getElementById('loader').classList.add('hidden');
+        showToast('⚠ '+(res.error||'Copy failed'));
+        if(res.authExpired) exitEditMode();
+      }
+    })
+    .withFailureHandler(function(){document.getElementById('loader').classList.add('hidden');showToast('⚠ Error');})
+    .copyLastWeek(AUTH_TOKEN,formatDate(currentWeekStart));
+};
+
+// ── DIAGNOSE ──────────────────────────────────────────────────
+document.getElementById('diagnoseBtn').onclick=function(){
+  google.script.run
+    .withSuccessHandler(function(info){
+      var msg = '=== DIAGNOSE COPY LAST WEEK ===\n\n';
+      msg += 'You are viewing:  ' + info.currentStr + '\n';
+      msg += 'Looking for:      ' + info.lastWeekStr + '\n';
+      msg += 'Timezone:         ' + info.timezone + '\n';
+      msg += 'Total data rows:  ' + info.totalDataRows + '\n\n';
+      msg += '--- ROWS IN SHEET ---\n';
+      info.rows.forEach(function(r){
+        msg += 'Row '+r.row+': type='+r.rawType+' raw="'+r.rawValue+'" norm="'+r.normalised+'"'+(r.matchesLastWeek?' ✅ MATCH':'') + ' ('+r.employee+')\n';
+      });
+      if (info.rows.filter(function(r){return r.matchesLastWeek;}).length === 0) {
+        msg += '\n⚠ No rows found matching last week ('+info.lastWeekStr+').\n';
+        msg += 'This means the shifts for that week were saved with a different weekStart value.\n';
+        msg += 'Try deleting those shifts and re-adding them while on the correct week.';
+      }
+      alert(msg);
+    })
+    .withFailureHandler(function(e){alert('Diagnose error: '+e.message);})
+    .diagnoseCopyLastWeek(AUTH_TOKEN,formatDate(currentWeekStart));
+};
+
+// ── WEEK NAV ──────────────────────────────────────────────────
+document.getElementById('prevWeek').onclick=function(){currentWeekStart=addDays(currentWeekStart,-7);loadSchedule();};
+document.getElementById('nextWeek').onclick=function(){currentWeekStart=addDays(currentWeekStart,7);loadSchedule();};
+
+// ── CALENDAR PICKER ───────────────────────────────────────────
+// Tap the week label to open a month calendar; tap any date to jump
+// to that week. Pure navigation — no data is read or written here.
+var MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var calMonth=new Date();   // any date inside the month being displayed
+
+function openCalendar(){
+  calMonth=new Date(currentWeekStart.getFullYear(),currentWeekStart.getMonth(),1);
+  renderCalendar();
+  document.getElementById('calOverlay').classList.remove('hidden');
+}
+function closeCalendar(){document.getElementById('calOverlay').classList.add('hidden');}
+function jumpToDate(d){
+  currentWeekStart=getMonday(d);
+  closeCalendar();
+  loadSchedule();
+}
+function renderCalendar(){
+  document.getElementById('calTitle').textContent=MONTH_NAMES[calMonth.getMonth()]+' '+calMonth.getFullYear();
+  var grid=document.getElementById('calGrid'); grid.innerHTML='';
+  DAYS.forEach(function(d){
+    var el=document.createElement('div'); el.className='cal-dow'; el.textContent=d.substring(0,2); grid.appendChild(el);
+  });
+  // Grid starts on the Monday on/before the 1st; 42 cells = 6 full weeks
+  var first=getMonday(new Date(calMonth.getFullYear(),calMonth.getMonth(),1));
+  var today=new Date(); today.setHours(0,0,0,0);
+  for(var i=0;i<42;i++){
+    var d=addDays(first,i);
+    var btn=document.createElement('button');
+    btn.className='cal-day';
+    if(d.getMonth()!==calMonth.getMonth()) btn.classList.add('other');
+    if(getMonday(d).getTime()===currentWeekStart.getTime()) btn.classList.add('in-week');
+    if(d.getTime()===today.getTime()) btn.classList.add('today');
+    btn.textContent=d.getDate();
+    (function(dd){btn.onclick=function(){jumpToDate(dd);};})(d);
+    grid.appendChild(btn);
+  }
+}
+document.getElementById('weekLabel').onclick=openCalendar;
+document.getElementById('calCancel').onclick=closeCalendar;
+document.getElementById('calToday').onclick=function(){jumpToDate(new Date());};
+document.getElementById('calPrev').onclick=function(){calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);renderCalendar();};
+document.getElementById('calNext').onclick=function(){calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);renderCalendar();};
+document.getElementById('calOverlay').addEventListener('click',function(e){if(e.target===this)closeCalendar();});
+
+// ── COPY LINK — uses real deployment URL from server ──────────
+document.getElementById('copyLinkBtn').onclick=function(){
+  var url=APP_URL||window.location.href.split('?')[0];
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){showToast('✅ Link copied — paste into your group chat');});
+  } else {
+    var el=document.createElement('textarea');el.value=url;
+    document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);
+    showToast('✅ Link copied — paste into your group chat');
+  }
+};
+
+// ── UTILITY ───────────────────────────────────────────────────
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// ── INIT ──────────────────────────────────────────────────────
+google.script.run
+  .withSuccessHandler(function(config){
+    EMPLOYEES=config.employees;
+    APP_URL=config.appUrl||'';   // store real URL for copy link button
+    loadSchedule();
+  })
+  .withFailureHandler(function(){
+    document.getElementById('loader').classList.add('hidden');
+    showToast('⚠ Could not connect');
+  })
+  .getConfig();
+</script>
+</body>
+</html>

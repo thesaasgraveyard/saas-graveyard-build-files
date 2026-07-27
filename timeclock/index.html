@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Time Clock</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      padding: 16px;
+      padding-bottom: 40px;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px 0 16px;
+    }
+    header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0e2558;
+      letter-spacing: -0.3px;
+    }
+    header p.date-time {
+      font-size: 13px;
+      color: #a79880;
+      margin-top: 4px;
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.11); }
+
+    .card-left { display: flex; align-items: center; gap: 12px; }
+    .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: #ccc;
+      transition: background 0.3s;
+    }
+    .dot.in  { background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,0.18); }
+    .dot.out { background: #d1d5db; }
+
+    .card-info .name {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0e2558;
+    }
+    .card-info .status-label {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 2px;
+      min-height: 16px;
+    }
+    .card-info .status-label.in  { color: #16a34a; }
+    .card-info .status-label.out { color: #9ca3af; }
+
+    .btn {
+      flex-shrink: 0;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+      min-width: 100px;
+      text-align: center;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn:disabled { opacity: 0.45; cursor: default; }
+
+    .btn-in  { background: #22c55e; color: #fff; }
+    .btn-out { background: #ef4444; color: #fff; }
+    .btn-loading { background: #e5e7eb; color: #aaa; }
+
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #0e2558;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #cbc2b4;
+      border-top-color: #0e2558;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loader.hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <div id="loader"><div class="spinner"></div></div>
+
+  <header>
+    <h1>🕐 Time Clock</h1>
+    <p class="date-time" id="clock"></p>
+  </header>
+
+  <div class="cards" id="cards"></div>
+
+  <div id="toast"></div>
+
+  <script>
+    function updateClock() {
+      var now = new Date();
+      var opts = { weekday:'long', month:'short', day:'numeric',
+                   hour:'numeric', minute:'2-digit', hour12: true };
+      document.getElementById('clock').textContent = now.toLocaleString('en-US', opts);
+    }
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    var toastTimer;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3500);
+    }
+
+    function renderCards(data) {
+      var container = document.getElementById('cards');
+      container.innerHTML = '';
+      data.employees.forEach(function(emp) {
+        var status = data.statuses[emp];
+        var card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          '<div class="card-left">' +
+            '<div class="dot ' + status + '" id="dot-' + safeid(emp) + '"></div>' +
+            '<div class="card-info">' +
+              '<div class="name">' + escapeHtml(emp) + '</div>' +
+              '<div class="status-label ' + status + '" id="lbl-' + safeid(emp) + '">' +
+                (status === 'in' ? 'Clocked in' : 'Clocked out') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<button class="btn ' + (status === 'in' ? 'btn-out' : 'btn-in') + '" ' +
+            'id="btn-' + safeid(emp) + '">' +
+            (status === 'in' ? 'Clock Out' : 'Clock In') +
+          '</button>';
+        // addEventListener instead of an inline onclick string — no risk of
+        // a name with quotes breaking out of the attribute
+        card.querySelector('button').addEventListener('click', function() {
+          punch(emp);
+        });
+        container.appendChild(card);
+      });
+      document.getElementById('loader').classList.add('hidden');
+    }
+
+    function punch(empName) {
+      var sid = safeid(empName);
+      var btn = document.getElementById('btn-' + sid);
+      var dot = document.getElementById('dot-' + sid);
+      var lbl = document.getElementById('lbl-' + sid);
+      var action = btn.classList.contains('btn-out') ? 'OUT' : 'IN';
+
+      btn.disabled = true;
+      btn.textContent = '…';
+      btn.className = 'btn btn-loading';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || !result.success) {
+            btn.disabled = false;
+            loadStatuses();
+            showToast('⚠ ' + ((result && result.error) || 'Error — please try again'));
+            return;
+          }
+          if (result.success) {
+            var nowIn = (action === 'IN');
+            dot.className = 'dot ' + (nowIn ? 'in' : 'out');
+            lbl.className = 'status-label ' + (nowIn ? 'in' : 'out');
+            lbl.textContent = nowIn ? 'Clocked in' : 'Clocked out';
+            btn.textContent = nowIn ? 'Clock Out' : 'Clock In';
+            btn.className = 'btn ' + (nowIn ? 'btn-out' : 'btn-in');
+            btn.disabled = false;
+            showToast(
+              (nowIn ? '✅ ' : '👋 ') + empName + ' clocked ' +
+              (nowIn ? 'IN' : 'OUT') + ' at ' + result.time
+            );
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          loadStatuses();
+          showToast('⚠ Error — please try again');
+        })
+        .clockEvent(empName, action);
+    }
+
+    function loadStatuses() {
+      google.script.run
+        .withSuccessHandler(renderCards)
+        .withFailureHandler(function() {
+          document.getElementById('loader').classList.add('hidden');
+          showToast('⚠ Could not load — check connection');
+        })
+        .getStatuses();
+    }
+
+    loadStatuses();
+
+    function safeid(str) { return str.replace(/[^a-zA-Z0-9]/g, '-'); }
+    function escapeHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+  </script>
+
+</body>
+</html>
