@@ -46,14 +46,6 @@ A weekly shift grid employees view through a shared link, and a manager edits be
   *(After reading the tradeoffs I chose to build from scratch, so I could customize it exactly. That's also where Claude suggested the auto-updating "Weekly Summary" tab that recalculates payroll totals every time someone clocks in or out.)*
 - *A later improvement prompt (in Claude Code):*
   > The Scheduler is a little slow but functional. I need you to review all the code for any inefficiencies and vulnerabilities, and suggest edits that will improve the UI and code. The functionality does not need to change much if at all, and attached is the color palette for the brand.
-
----
-
-### Coming soon
-Two more builds are documented in the series and will be added here after their own credential scrub:
-- **CRM dashboard** (Part Four) — a Monday.com-style dashboard + a redirect to a Google Sheet.
-- **Wholesale order system** (Part Six, forthcoming) — a direct order page with Net 60 terms and invoicing.
-
 ---
 
 ## How to adapt any of this with Claude
@@ -71,4 +63,4 @@ If you get something working, or get stuck, the newsletter comments are open. Th
 
 ---
 
-*Built with Claude by a non-technical small business owner. Nothing in the articles is invented — including the parts that went wrong.*
+*Built with Claude by a non-technical small business owner.*
