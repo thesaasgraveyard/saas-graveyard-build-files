@@ -3,7 +3,6 @@
 The actual code behind **The SaaS Graveyard** — a first-person series about a non-technical small business owner replacing paid software with tools built using Claude.
 
 - **Read the stories:** [thesaasgraveyard.substack.com](https://thesaasgraveyard.substack.com)
-- **The businesses:** MAG Beverages (wholesale kava beverages) and Sweet Tapioca Cafe, Saint Louis, MO.
 - **Running total:** $1,080+/year in cancelled subscriptions, built in under 20 hours of actual working time, with zero coding background.
 
 These are not products. They are the genuine, small-business-grade tools I built for two real businesses, shared here so you can take one and adapt it to yours instead of just reading about mine. Every build includes the plain-language prompts that produced it, because the prompt is the part most people never get to see — and it is the part that actually matters.
