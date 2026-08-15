@@ -22,16 +22,13 @@ Shows images and short videos on the cafe's TVs. Content lives in a Google Drive
 - **Set before running:** each Apps Script's `FOLDER_ID` (your Drive folder), the deployed Web App URLs in `player/netlify.toml` and `roku-channel/source/config.brs`.
 
 **Prompts that worked**
-- `[AUTHOR: paste the prompt you used to design the signage player / Roku channel]`
+- `I have an optisigns subscirption which I use to project static images or short videos on to a Roku TV. This costs $20 per month. I want you to create an app or another method for me to project  static images or short videos on to a Roku TV. Take your time and don't make mistakes.`
 
 ### `timeclock/` — Employee time clock (replaced part of Homebase, $288/yr with the scheduler)
 A QR code on the wall opens a phone page where employees tap to clock in and out. A Google Sheet logs every punch and keeps a running pay-period summary, so the math is already done on payday.
 - **Stack:** Google Apps Script · Google Sheets
 - **Story:** SaaS Graveyard, Part Three
 - **Set before running:** the `EMPLOYEES` list, `PAY_PERIOD_EPOCH`, and the deployed Web App URL in the printable QR sheet.
-
-**Prompts that worked**
-- `[AUTHOR: paste the time-clock prompt if it was separate from the scheduler]`
 
 ### `scheduler/` — Staff scheduler (replaced part of Homebase, $288/yr with the time clock)
 A weekly shift grid employees view through a shared link, and a manager edits behind a PIN. A "Copy Last Week" button handles the weeks that don't change, which is most of them.
