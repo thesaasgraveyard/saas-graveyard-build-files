@@ -24,17 +24,17 @@ var EMPLOYEES = [
 ];
 
 // Brand colors
-var BRAND_NAVY   = '#0e2558';
-var BRAND_INDIGO = '#2f3192';
-var BRAND_SKY    = '#25a4dd';
-var BRAND_TAUPE  = '#a79880';
-var BRAND_SAND   = '#cbc2b4';
+var BRAND_NAVY   = '#2b3440';
+var BRAND_INDIGO = '#3d4759';
+var BRAND_SKY    = '#5f83a0';
+var BRAND_TAUPE  = '#8b909a';
+var BRAND_SAND   = '#ccd0d6';
 
 // Accent colors for payroll states
 var COLOR_GRAY   = '#cccccc';
 var COLOR_ORANGE = '#e65100';
 var COLOR_GREEN  = '#059669';
-var TIPS_BG      = '#eaf4fb';
+var TIPS_BG      = '#eef1f4';
 // ───────────────────────────────────────────────────────────
 
 
