@@ -3,7 +3,6 @@
 The actual code behind **The SaaS Graveyard** — a first-person series about a non-technical small business owner replacing paid software with tools built using Claude.
 
 - **Read the stories:** [thesaasgraveyard.substack.com](https://thesaasgraveyard.substack.com)
-- **The businesses:** MAG Beverages (wholesale kava beverages) and Sweet Tapioca Cafe, Saint Louis, MO.
 - **Running total:** $1,080+/year in cancelled subscriptions, built in under 20 hours of actual working time, with zero coding background.
 
 These are not products. They are the genuine, small-business-grade tools I built for two real businesses, shared here so you can take one and adapt it to yours instead of just reading about mine. Every build includes the plain-language prompts that produced it, because the prompt is the part most people never get to see — and it is the part that actually matters.
@@ -23,16 +22,13 @@ Shows images and short videos on the cafe's TVs. Content lives in a Google Drive
 - **Set before running:** each Apps Script's `FOLDER_ID` (your Drive folder), the deployed Web App URLs in `player/netlify.toml` and `roku-channel/source/config.brs`.
 
 **Prompts that worked**
-- `[AUTHOR: paste the prompt you used to design the signage player / Roku channel]`
+- `I have an optisigns subscirption which I use to project static images or short videos on to a Roku TV. This costs $20 per month. I want you to create an app or another method for me to project  static images or short videos on to a Roku TV. `
 
 ### `timeclock/` — Employee time clock (replaced part of Homebase, $288/yr with the scheduler)
 A QR code on the wall opens a phone page where employees tap to clock in and out. A Google Sheet logs every punch and keeps a running pay-period summary, so the math is already done on payday.
 - **Stack:** Google Apps Script · Google Sheets
 - **Story:** SaaS Graveyard, Part Three
 - **Set before running:** the `EMPLOYEES` list, `PAY_PERIOD_EPOCH`, and the deployed Web App URL in the printable QR sheet.
-
-**Prompts that worked**
-- `[AUTHOR: paste the time-clock prompt if it was separate from the scheduler]`
 
 ### `scheduler/` — Staff scheduler (replaced part of Homebase, $288/yr with the time clock)
 A weekly shift grid employees view through a shared link, and a manager edits behind a PIN. A "Copy Last Week" button handles the weeks that don't change, which is most of them.
@@ -47,13 +43,6 @@ A weekly shift grid employees view through a shared link, and a manager edits be
   *(After reading the tradeoffs I chose to build from scratch, so I could customize it exactly. That's also where Claude suggested the auto-updating "Weekly Summary" tab that recalculates payroll totals every time someone clocks in or out.)*
 - *A later improvement prompt (in Claude Code):*
   > The Scheduler is a little slow but functional. I need you to review all the code for any inefficiencies and vulnerabilities, and suggest edits that will improve the UI and code. The functionality does not need to change much if at all, and attached is the color palette for the brand.
-
----
-
-### Coming soon
-Two more builds are documented in the series and will be added here after their own credential scrub:
-- **CRM dashboard** (Part Four) — a Monday.com-style dashboard + a redirect to a Google Sheet.
-- **Wholesale order system** (Part Six, forthcoming) — a direct order page with Net 60 terms and invoicing.
 
 ---
 
