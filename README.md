@@ -7,7 +7,7 @@ The actual code behind **The SaaS Graveyard** — a first-person series about a 
 
 These are not products. They are the genuine, small-business-grade tools I built for two real businesses, shared here so you can take one and adapt it to yours instead of just reading about mine. Every build includes the plain-language prompts that produced it, because the prompt is the part most people never get to see — and it is the part that actually matters.
 
-> **Before you trust any of this:** these tools are shared as-is, with no support and no warranty. **Credentials, live URLs, PINs, and employee names have been removed and replaced with `PASTE_YOUR_...` / `YOUR_..._HERE` placeholders** — you must fill in your own before anything will run. Costs, links, and third-party services may have changed since the articles were written. Read the code (or have Claude read it to you) before running it in your own business.
+> **Before you trust any of this:** these tools are shared as-is, with no support and no warranty. **Credentials, live URLs, PINs, and employee names have been removed and replaced with `PASTE_YOUR_...` / `YOUR_..._HERE` placeholders** — you must fill in your own before anything will run. Costs, links, and third-party services may have changed since the articles were written. Read the code before running it in your own business.
 
 ---
 
