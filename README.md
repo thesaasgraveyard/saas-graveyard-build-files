@@ -22,7 +22,7 @@ Shows images and short videos on the cafe's TVs. Content lives in a Google Drive
 - **Set before running:** each Apps Script's `FOLDER_ID` (your Drive folder), the deployed Web App URLs in `player/netlify.toml` and `roku-channel/source/config.brs`.
 
 **Prompts that worked**
-- `I have an optisigns subscirption which I use to project static images or short videos on to a Roku TV. This costs $20 per month. I want you to create an app or another method for me to project  static images or short videos on to a Roku TV. `
+> I have an optisigns subscirption which I use to project static images or short videos on to a Roku TV. This costs $20 per month. I want you to create an app or another method for me to project  static images or short videos on to a Roku TV. 
 
 ### `timeclock/` — Employee time clock (replaced part of Homebase, $288/yr with the scheduler)
 A QR code on the wall opens a phone page where employees tap to clock in and out. A Google Sheet logs every punch and keeps a running pay-period summary, so the math is already done on payday.
@@ -59,6 +59,4 @@ You do not need to know how to code to use these. Here is the whole method:
 
 If you get something working, or get stuck, the newsletter comments are open. This repository grows as the series does.
 
----
 
-*Built with Claude by a non-technical small business owner. Nothing in the articles is invented — including the parts that went wrong.*
